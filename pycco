@@ -27,10 +27,28 @@
 # and merging them into an HTML template.
 def generate_documentation(source):
     fh = open(source, "r")
-    sections = parse(source, fh.read())
+    sections = parse(source, preparse(fh.read()))
     highlight(source,
               sections)
     generate_html(source, sections)
+
+license_header = """// This code is under the XYZ License""";
+
+# Preparse /*blah*/-style comments into //-style comments
+def preparse(code):
+    c = re.compile('(/\*.*?\*/)', re.DOTALL)
+    d = re.compile('^\s?([ \t\*]+?)', re.MULTILINE)
+    l = []
+    for block in c.split(code):
+        if(block.count("THE SOFTWARE IS PROVIDED")):
+            l.append(license_header);
+        elif(block.strip().startswith("/*")):
+            print [block, d.sub(r'// ', block.strip()[2:-2])]
+            l.append(d.sub(r'// ', block.strip()[2:-2]))
+        else:
+            l.append(block)
+
+    return "".join(l)
 
 # Given a string of source code, parse out each comment and the code that
 # follows it, and create an individual **section** for it.
@@ -127,12 +145,13 @@ from subprocess import Popen, PIPE
 # the name of the Pygments lexer and the symbol that indicates a comment. To
 # add another language to Pycco's repertoire, add it here.
 languages = {
-    ".coffee": { "name": "coffee-script", "symbol": "#" },
+    #".coffee": { "name": "coffee-script", "symbol": "#" },
     ".js":     { "name": "javascript",    "symbol": "//" },
     ".rb":     { "name": "ruby",          "symbol": "#" },
     ".py":     { "name": "python",        "symbol": "#" },
-    ".scm":    { "name": "scheme",        "symbol": ";;" },
-    ".lua":    { "name": "lua",           "symbol": "--" },
+    #".scm":    { "name": "scheme",        "symbol": ";;" },
+    #".lua":    { "name": "lua",           "symbol": "--" },
+    ".c":      { "name": "c",             "symbol": "//"},
 }
 
 # Build out the appropriate matchers and delimiters for each language.
